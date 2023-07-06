@@ -50,7 +50,38 @@ Type kgf_x_given_s(const vector<Type> &t, const vector<Type> &s, const matrix<Ty
 // MGF for a single individual's counts.
 template<class Type>
 Type mgf_x_given_s(const vector<Type> &t, const vector<Type> &s, const matrix<Type> &traps, const Type &lambda0, const Type &sigma, const vector<int> nonzero){
-  return exp(mgf_x_given_s(t, s, traps, lambda0, sigma, nonzero));
+  return exp(kgf_x_given_s(t, s, traps, lambda0, sigma, nonzero));
 }
 
+// MGF for the marginal distribution of a single individual's counts.
+template<class Type>
+Type mgf_x(const vector<Type> &t, const matrix<Type> &m, const matrix<Type> &traps, const Type &lambda0, const Type &sigma, const vector<int> nonzero){
+  int n_mask = m.rows();
+  Type out = 0;
+  vector<Type> s(2);
+  for (int i = 0; i < n_mask; i++){
+    s = m.row(i);
+    out += mgf_x_given_s(t, s, traps, lambda0, sigma, nonzero);
+  }
+  return out/n_mask;
+}
+
+// KGF for a single individual's counts.
+template<class Type>
+Type kgf_x(const vector<Type> &t, const matrix<Type> &m, const matrix<Type> &traps, const Type &lambda0, const Type &sigma, const vector<int> nonzero){
+  return log(mgf_x(t, m, traps, lambda0, sigma, nonzero));
+}
+
+// KGF for the combined counts.
+template<class Type>
+Type kgf_c(const vector<Type> &t, const matrix<Type> &m, const matrix<Type> &traps, const Type &lambda0, const Type &sigma, const Type &EN, const vector<int> nonzero){
+  return kgf_pois(kgf_x(t, m, traps, lambda0, sigma, nonzero), EN);
+}
+
+// MGF for the combined counts.
+template<class Type>
+Type mgf_c(const vector<Type> &t, const matrix<Type> &m, const matrix<Type> &traps, const Type &lambda0, const Type &sigma, const Type &EN, const vector<int> nonzero){
+  return exp(kgf_c(t, m, traps, lambda0, sigma, EN, nonzero));
+}
+  
 #endif
